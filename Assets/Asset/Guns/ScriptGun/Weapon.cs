@@ -3,26 +3,33 @@ using UnityEngine.InputSystem;
 
 public class Weapon : MonoBehaviour
 {
+    [Header("Orbit Settings")]
+    [SerializeField] private Transform playerTransform;
+    [SerializeField] private float orbitDistance = 0.8f;
+
     [Header("Weapon Settings")]
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireRate = 0.15f;
 
+    [Header("Scale Settings")]
+    [SerializeField] private Vector3 gunScale = new Vector3(0.4f, 0.4f, 1f); // Atur ukuran ideal senjata di sini
+
     private float nextFireTime = 0f;
     private Camera mainCam;
     private SpriteRenderer gunSprite;
-    private Animator gunAnim; // Ditambahkan
+    private Animator gunAnim;
 
     private void Awake()
     {
         mainCam = Camera.main;
         gunSprite = GetComponent<SpriteRenderer>();
-        gunAnim = GetComponent<Animator>(); // Ditambahkan
+        gunAnim = GetComponent<Animator>(); // Mengambil komponen Animator Gun
     }
 
     private void Update()
     {
-        AimAtMouse();
+        HandleOrbitAndAim();
 
         if (Mouse.current.leftButton.isPressed && Time.time >= nextFireTime)
         {
@@ -31,21 +38,28 @@ public class Weapon : MonoBehaviour
         }
     }
 
-    private void AimAtMouse()
+    private void HandleOrbitAndAim()
     {
-        Vector3 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-        Vector3 lookDir = mousePos - transform.position;
-        float angle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg;
+        if (playerTransform == null) return;
 
+        Vector3 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        mousePos.z = 0f;
+
+        Vector3 aimDirection = (mousePos - playerTransform.position).normalized;
+
+        transform.position = playerTransform.position + (aimDirection * orbitDistance);
+
+        float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
 
-        if (angle > 90f || angle < -90f)
+        // Flip Y menggunakan custom gunScale agar ukuran tetap proporsional
+        if (Mathf.Abs(angle) > 90f)
         {
-            gunSprite.flipY = true;
+            transform.localScale = new Vector3(gunScale.x, -gunScale.y, gunScale.z);
         }
         else
         {
-            gunSprite.flipY = false;
+            transform.localScale = gunScale;
         }
     }
 
@@ -55,7 +69,7 @@ public class Weapon : MonoBehaviour
         {
             Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
 
-            // Picu animasi tembakan
+            // Memanggil animasi tembakan saat peluru dimunculkan
             if (gunAnim != null)
             {
                 gunAnim.SetTrigger("shoot");

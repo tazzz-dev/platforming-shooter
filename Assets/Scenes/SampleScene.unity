@@ -767,9 +767,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0f71a8e07d83064a8c3c4895f8361ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Weapon
+  playerTransform: {fileID: 935330641}
+  orbitDistance: 0.7
   bulletPrefab: {fileID: 2823635180420667633, guid: a3bf8c582aef36747827866f3e39afb1, type: 3}
   firePoint: {fileID: 1747384250}
   fireRate: 0.15
+  gunScale: {x: 0.4, y: 0.4, z: 1}
 --- !u!212 &1019893592
 SpriteRenderer:
   serializedVersion: 2
