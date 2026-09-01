@@ -13,18 +13,20 @@ public class Bullet : MonoBehaviour
 
     private void Start()
     {
-        // Beri kecepatan maju searah dengan rotasi peluru
+        // Peluru terbang sesuai arah moncong saat di-spawn
         rb.linearVelocity = transform.right * speed;
-        Destroy(gameObject, lifeTime); // Hancurkan peluru otomatis setelah beberapa detik
+        Destroy(gameObject, lifeTime);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // Cek jika menabrak tanah/musuh (abaikan jika menabrak Player)
-        if (!collision.CompareTag("Player"))
+        // UPDATE: Filter agar peluru tidak bunuh diri/nabrak player/nabrak senjata
+        if (collision.CompareTag("Player") || collision.CompareTag("Weapon") || collision.CompareTag("Bullet"))
         {
-            // Nanti di sini ditambahkan fungsi kasih damage ke musuh
-            Destroy(gameObject); // Hancurkan peluru saat kena objek
+            return;
         }
+
+        // Hancurkan peluru jika kena tanah atau musuh
+        Destroy(gameObject);
     }
 }
