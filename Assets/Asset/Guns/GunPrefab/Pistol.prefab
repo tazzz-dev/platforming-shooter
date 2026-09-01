@@ -41,8 +41,8 @@ GameObject:
   m_Component:
   - component: {fileID: 7980565029353169107}
   - component: {fileID: 4119452711314097666}
-  - component: {fileID: 3243237195179651264}
   - component: {fileID: 5597061083548588871}
+  - component: {fileID: 6147780010407973321}
   m_Layer: 0
   m_Name: Pistol
   m_TagString: Untagged
@@ -59,7 +59,7 @@ Transform:
   m_GameObject: {fileID: 5003410773697037377}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5308, y: -0.176, z: 0}
+  m_LocalPosition: {x: 0.18272007, y: 0.03237, z: 0}
   m_LocalScale: {x: 0.2759036, y: 0.308708, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -125,24 +125,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &3243237195179651264
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5003410773697037377}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0f71a8e07d83064a8c3c4895f8361ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Weapon
-  playerTransform: {fileID: 0}
-  orbitDistance: 0.7
-  bulletPrefab: {fileID: 2823635180420667633, guid: a3bf8c582aef36747827866f3e39afb1, type: 3}
-  firePoint: {fileID: 4428854120501480977}
-  fireRate: 0.15
-  gunScale: {x: 0.4, y: 0.4, z: 1}
 --- !u!95 &5597061083548588871
 Animator:
   serializedVersion: 7
@@ -165,3 +147,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &6147780010407973321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5003410773697037377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4960bb6ef8366e74a87ccfe9e9f084a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Pistol
+  playerTransform: {fileID: 0}
+  orbitDistance: 0.8
+  bulletPrefab: {fileID: 2823635180420667633, guid: a3bf8c582aef36747827866f3e39afb1, type: 3}
+  firePoint: {fileID: 4428854120501480977}
+  fireRate: 0.15
+  muzzleFlashPrefab: {fileID: 6090302524829608400, guid: b1d7f34d132add04399cb22568b3fd6e, type: 3}
+  gunScale: {x: 1, y: 1, z: 1}

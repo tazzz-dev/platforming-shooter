@@ -12,19 +12,20 @@ public class Pistol : MonoBehaviour
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireRate = 0.15f;
 
+    [Header("VFX Settings")]
+    [SerializeField] private GameObject muzzleFlashPrefab;
+
     [Header("Scale Settings")]
-    [SerializeField] private Vector3 gunScale = new Vector3(0.4f, 0.4f, 1f); // Atur ukuran ideal senjata di sini
+    [SerializeField] private Vector3 gunScale = new Vector3(1f, 1f, 1f);
 
     private float nextFireTime = 0f;
     private Camera mainCam;
-    private SpriteRenderer gunSprite;
     private Animator gunAnim;
 
     private void Awake()
     {
         mainCam = Camera.main;
-        gunSprite = GetComponent<SpriteRenderer>();
-        gunAnim = GetComponent<Animator>(); // Mengambil komponen Animator Gun
+        gunAnim = GetComponent<Animator>();
     }
 
     private void Update()
@@ -46,13 +47,11 @@ public class Pistol : MonoBehaviour
         mousePos.z = 0f;
 
         Vector3 aimDirection = (mousePos - playerTransform.position).normalized;
-
         transform.position = playerTransform.position + (aimDirection * orbitDistance);
 
         float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
 
-        // Flip Y menggunakan custom gunScale agar ukuran tetap proporsional
         if (Mathf.Abs(angle) > 90f)
         {
             transform.localScale = new Vector3(gunScale.x, -gunScale.y, gunScale.z);
@@ -65,15 +64,18 @@ public class Pistol : MonoBehaviour
 
     private void Shoot()
     {
-        if (bulletPrefab != null && firePoint != null)
-        {
-            Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        if (bulletPrefab == null || firePoint == null) return;
 
-            // Memanggil animasi tembakan saat peluru dimunculkan
-            if (gunAnim != null)
-            {
-                gunAnim.SetTrigger("shoot");
-            }
+        Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+
+        if (muzzleFlashPrefab != null)
+        {
+            Instantiate(muzzleFlashPrefab, firePoint.position, firePoint.rotation, firePoint);
+        }
+
+        if (gunAnim != null)
+        {
+            gunAnim.SetTrigger("shoot");
         }
     }
 }

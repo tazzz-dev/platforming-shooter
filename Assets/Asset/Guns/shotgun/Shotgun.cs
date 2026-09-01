@@ -14,6 +14,10 @@ public class Shotgun : MonoBehaviour
     [SerializeField] private int pelletsCount = 5;      // Peluru menyebar
     [SerializeField] private float spreadAngle = 15f;   // Sudut sebaran
 
+
+    [Header("VFX Settings")]
+    [SerializeField] private GameObject muzzleFlashPrefab; // Tambahkan ini di bagian atas kelas
+
     private float nextFireTime = 0f;
     private Camera mainCam;
     private Animator gunAnim;
@@ -57,6 +61,7 @@ public class Shotgun : MonoBehaviour
     {
         if (bulletPrefab == null || firePoint == null) return;
 
+        // 1. Spawn Peluru Menyebar (Looping Pellets)
         for (int i = 0; i < pelletsCount; i++)
         {
             float randomSpread = Random.Range(-spreadAngle, spreadAngle);
@@ -64,6 +69,16 @@ public class Shotgun : MonoBehaviour
             Instantiate(bulletPrefab, firePoint.position, spreadRotation);
         }
 
-        if (gunAnim != null) gunAnim.SetTrigger("shoot");
+        // 2. Spawn Efek Muzzle Flash (1x Tembak)
+        if (muzzleFlashPrefab != null)
+        {
+            Instantiate(muzzleFlashPrefab, firePoint.position, firePoint.rotation, firePoint);
+        }
+
+        // 3. Trigger Animasi Tembak
+        if (gunAnim != null)
+        {
+            gunAnim.SetTrigger("shoot");
+        }
     }
 }
