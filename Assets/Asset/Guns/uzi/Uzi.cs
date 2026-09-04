@@ -11,6 +11,7 @@ public class Uzi : MonoBehaviour
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireRate = 0.08f; // Sangat cepat untuk Uzi
+    [SerializeField] private float spreadAngle = 15f; // Semakin besar angkanya, semakin acak arah pelurunya
 
     [Header("VFX Settings")]
     [SerializeField] private GameObject muzzleFlashPrefab;
@@ -71,7 +72,12 @@ public class Uzi : MonoBehaviour
     {
         if (bulletPrefab == null || firePoint == null) return;
 
-        Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        // Menghitung rotasi acak (spread)
+        float randomAngle = Random.Range(-spreadAngle / 2f, spreadAngle / 2f);
+        Quaternion bulletRotation = Quaternion.Euler(0, 0, firePoint.eulerAngles.z + randomAngle);
+
+        // Memunculkan peluru dengan rotasi yang sudah diacak
+        Instantiate(bulletPrefab, firePoint.position, bulletRotation);
 
         if (muzzleFlashPrefab != null)
         {
