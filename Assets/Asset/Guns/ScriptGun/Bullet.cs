@@ -26,7 +26,23 @@ public class Bullet : MonoBehaviour
             return;
         }
 
-        // Hancurkan peluru jika kena tanah atau musuh
-        Destroy(gameObject);
+        if (collision.CompareTag("Enemy"))
+        {
+            EnemyHealth enemyHealth = collision.GetComponent<EnemyHealth>();
+
+            if (enemyHealth == null)
+            {
+                enemyHealth = collision.GetComponentInParent<EnemyHealth>();
+            }
+
+            if (enemyHealth != null)
+            {
+                enemyHealth.TakeDamage(1); // memberikan damage 1 peluru ke player
+            }
+
+            // Hancurkan peluru jika kena tanah atau musuh
+            Destroy(gameObject);
+            return;
+        }
     }
 }
