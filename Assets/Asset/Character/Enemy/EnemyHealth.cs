@@ -4,38 +4,36 @@ using UnityEngine;
 public class EnemyHealth : MonoBehaviour
 {
     [Header("Health Settings")]
-    [SerializeField] private int maxHealth = 2; // Bisa diatur di Inspector (1, 2, 3, dst.)
+    [SerializeField] private int maxHealth = 3;
     private int currentHealth;
 
-    [Header("Visual Feedback")]
-    [SerializeField] private Color hitColor = Color.red;
-    [SerializeField] private float flashDuration = 0.1f;
+    [Header("UI Reference")]
+    [SerializeField] private FloatingHealthBar healthBar;
 
-    private SpriteRenderer spriteRenderer;
-    private Color originalColor;
-    private bool isFlashing = false;
-
-    private void Awake()
+    private void Start()
     {
         currentHealth = maxHealth;
-        spriteRenderer = GetComponent<SpriteRenderer>();
 
-        if (spriteRenderer != null)
+        // Inisialisasi jumlah hati di UI saat start
+        if (healthBar != null)
         {
-            originalColor = spriteRenderer.color;
+            healthBar.SetupHearts(maxHealth);
+        } 
+        else
+        {
+            Debug.LogError("Healthbar belum ada wok");
         }
     }
 
-    // Fungsi utama untuk menerima damage dari peluru Player
     public void TakeDamage(int damageAmount = 1)
     {
         currentHealth -= damageAmount;
-        Debug.Log(gameObject.name + " terkena hit! Sisa HP: " + currentHealth);
+        if (currentHealth < 0) currentHealth = 0;
 
-        // Triger efek kedip merah saat kena hit
-        if (spriteRenderer != null && !isFlashing)
+        // Update tampilan hati
+        if (healthBar != null)
         {
-            StartCoroutine(FlashRoutine());
+            healthBar.UpdateHearts(currentHealth);
         }
 
         if (currentHealth <= 0)
@@ -44,21 +42,8 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
-    private IEnumerator FlashRoutine()
-    {
-        isFlashing = true;
-        spriteRenderer.color = hitColor;
-
-        yield return new WaitForSeconds(flashDuration);
-
-        spriteRenderer.color = originalColor;
-        isFlashing = false;
-    }
-
     private void Die()
     {
-        Debug.Log(gameObject.name + " Mati!");
-        // Kamu bisa menaruh efek partikel ledakan / SFX di sini nanti
         Destroy(gameObject);
     }
 }
