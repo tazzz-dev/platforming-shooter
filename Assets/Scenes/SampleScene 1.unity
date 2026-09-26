@@ -677,6 +677,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -802,6 +803,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcf087898afdab542a3eac66ea54c4aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
+  target: {fileID: 935330641}
+  offset: {x: 0, y: 0.5, z: -10}
+  deadZone: {x: 3, y: 2}
+  smoothSpeed: 5
 --- !u!1 &539055980
 GameObject:
   m_ObjectHideFlags: 0
@@ -1459,13 +1476,13 @@ MonoBehaviour:
   walkSpeed: 3.5
   runSpeed: 7
   jumpForce: 5
-  doubleJumpForce: 11
+  doubleJumpForce: 5
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
   groundCheck: {fileID: 627821362}
   groundCheckRadius: 0.2
-  dashSpeed: 24
+  dashSpeed: 12
   dashDuration: 0.2
   dashCooldown: 1
   shootAnimDuration: 0.2
@@ -1498,7 +1515,7 @@ GameObject:
   - component: {fileID: 1028151701}
   - component: {fileID: 1028151700}
   - component: {fileID: 1028151699}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Tilemap
   m_TagString: Ground
   m_Icon: {fileID: 0}
@@ -30822,7 +30839,7 @@ GameObject:
   - component: {fileID: 1515370830}
   - component: {fileID: 1515370832}
   - component: {fileID: 1515370831}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Tilemap (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31399,7 +31416,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1648984533}
   - component: {fileID: 1648984532}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31539,7 +31556,7 @@ GameObject:
   - component: {fileID: 1916898021}
   - component: {fileID: 1916898023}
   - component: {fileID: 1916898022}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Tilemap (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -35078,7 +35095,7 @@ GameObject:
   - component: {fileID: 2113722285}
   - component: {fileID: 2113722288}
   - component: {fileID: 2113722287}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Tilemap (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
