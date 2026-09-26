@@ -6,7 +6,7 @@ AnimationClip:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Fall
+  m_Name: DoubleJump
   serializedVersion: 7
   m_Legacy: 0
   m_Compressed: 0
@@ -21,13 +21,15 @@ AnimationClip:
   - serializedVersion: 2
     curve:
     - time: 0
-      value: {fileID: -1846781244278701463, guid: 4374d904cbf45784b91d15ee0ace3a52, type: 3}
+      value: {fileID: -8876171952231600836, guid: b5738286f7777144782fad81e21469a2, type: 3}
+    - time: 0.016666668
+      value: {fileID: -3771181679530074140, guid: b5738286f7777144782fad81e21469a2, type: 3}
     attribute: m_Sprite
     path: 
     classID: 212
     script: {fileID: 0}
     flags: 2
-  m_SampleRate: 16
+  m_SampleRate: 60
   m_WrapMode: 0
   m_Bounds:
     m_Center: {x: 0, y: 0, z: 0}
@@ -44,13 +46,14 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     pptrCurveMapping:
-    - {fileID: -1846781244278701463, guid: 4374d904cbf45784b91d15ee0ace3a52, type: 3}
+    - {fileID: -8876171952231600836, guid: b5738286f7777144782fad81e21469a2, type: 3}
+    - {fileID: -3771181679530074140, guid: b5738286f7777144782fad81e21469a2, type: 3}
   m_AnimationClipSettings:
     serializedVersion: 2
     m_AdditiveReferencePoseClip: {fileID: 0}
     m_AdditiveReferencePoseTime: 0
     m_StartTime: 0
-    m_StopTime: 0.0625
+    m_StopTime: 0.033333335
     m_OrientationOffsetY: 0
     m_Level: 0
     m_CycleOffset: 0

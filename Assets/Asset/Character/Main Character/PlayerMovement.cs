@@ -4,8 +4,10 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField] private float moveSpeed = 7f;
+    [SerializeField] private float walkSpeed = 3.5f; // Kecepatan jalan santai (tanpa Shift)
+    [SerializeField] private float runSpeed = 7f;    // Kecepatan lari kencang (tahan Shift)
     [SerializeField] private float jumpForce = 12f;
+    [SerializeField] private float doubleJumpForce = 11f; // Kekuatan lompatan kedua (Double Jump)
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.2f;
@@ -15,11 +17,23 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float dashDuration = 0.2f; // Lama waktu dash berlangsung
     [SerializeField] private float dashCooldown = 1f; // Jeda sebelum bisa dash lagi
 
+    [Header("Shooting Animation Settings")]
+    [SerializeField] private float shootAnimDuration = 0.35f; // Berapa lama animasi tembak aktif setelah klik (dinaikkan agar pose tembak terlihat jelas)
+
+    [Header("Animation Settings")]
+    [SerializeField] private bool useWalkAnimation = true; // Aktifkan jika menggunakan state animasi Walking terpisah (state = 5)
+
     private Rigidbody2D rb;
     private Animator anim;
     private SpriteRenderer sprite;
+    private Camera mainCam;
     private float dirX = 0f;
     private bool isGrounded;
+    private bool isRunning;
+
+    // Variabel untuk fitur Double Jump
+    private bool canDoubleJump;
+    private bool isDoubleJumping;
 
     // Variabel untuk fitur Dash
     private bool isDashing;
@@ -27,14 +41,20 @@ public class PlayerMovement : MonoBehaviour
     private float dashTimeLeft;
     private float lastDashTime = -100f;
 
+    // Variabel untuk fitur Menembak
+    private float shootTimer = 0f;
+    private bool isShooting;
+
     // Enum State Animasi
-    private enum MovementState { idle, running, jumping, falling }
+    // 0: idle, 1: running, 2: jumping, 3: falling, 4: doubleJump, 5: walking
+    private enum MovementState { idle, running, jumping, falling, doubleJump, walking }
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
+        mainCam = Camera.main;
         
         // Simpan nilai gravitasi asli agar bisa dikembalikan setelah dash
         originalGravity = rb.gravityScale;
@@ -55,32 +75,82 @@ public class PlayerMovement : MonoBehaviour
             return; // Berhenti di sini, jangan lanjutkan ke kode jalan/lompat
         }
 
-        // 2. Cek tombol Dash (menggunakan tombol Shift Kiri)
-        if (Keyboard.current.leftShiftKey.wasPressedThisFrame && Time.time >= lastDashTime + dashCooldown)
+        // 2. Cek tombol Dash (menggunakan tombol Ctrl Kiri atau Kanan)
+        bool isCtrlPressed = (Keyboard.current.leftCtrlKey.wasPressedThisFrame || Keyboard.current.rightCtrlKey.wasPressedThisFrame);
+        if (isCtrlPressed && Time.time >= lastDashTime + dashCooldown)
         {
             StartDash();
             return;
         }
 
-        // 3. Sistem Pergerakan Normal
+        // 3. Deteksi Input Tembak (Klik Kiri Mouse)
+        HandleShootingInput();
+
+        // 4. Sistem Pergerakan Normal (Jalan santai vs Lari tahan Shift)
         dirX = 0f;
         if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) dirX = -1f;
         if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) dirX = 1f;
 
-        rb.linearVelocity = new Vector2(dirX * moveSpeed, rb.linearVelocity.y);
+        // Cek tombol Shift: Karakter hanya berlari jika tombol Shift ditahan
+        bool isHoldingShift = (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed);
+        isRunning = isHoldingShift && (dirX != 0f);
 
+        // Tentukan kecepatan gerak berdasarkan apakah sedang lari atau jalan
+        float currentSpeed = isRunning ? runSpeed : walkSpeed;
+        rb.linearVelocity = new Vector2(dirX * currentSpeed, rb.linearVelocity.y);
+
+        // Pengecekan Tanah (Grounded)
         if (groundCheck != null)
         {
+            bool wasGrounded = isGrounded;
             isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+
+            // Jika baru mendarat di tanah, reset kemampuan lompat kedua
+            if (isGrounded)
+            {
+                canDoubleJump = true;
+                isDoubleJumping = false;
+            }
         }
 
-        // 4. Sistem Lompat (Spasi)
-        if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
+        // 5. Sistem Lompat & Double Jump (Spasi)
+        if (Keyboard.current.spaceKey.wasPressedThisFrame)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            if (isGrounded)
+            {
+                // Lompatan pertama dari tanah
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+                canDoubleJump = true;
+            }
+            else if (canDoubleJump)
+            {
+                // Lompatan kedua di udara (Double Jump)
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, doubleJumpForce);
+                canDoubleJump = false;
+                isDoubleJumping = true;
+            }
         }
 
         UpdateAnimationState();
+    }
+
+    private void HandleShootingInput()
+    {
+        // Cek apakah klik kiri mouse ditekan
+        if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+        {
+            shootTimer = shootAnimDuration;
+        }
+
+        if (shootTimer > 0f)
+        {
+            shootTimer -= Time.deltaTime;
+            isShooting = true;
+        }
+        else
+        {
+            isShooting = false;
+        }
     }
 
     private void StartDash()
@@ -97,39 +167,91 @@ public class PlayerMovement : MonoBehaviour
         rb.gravityScale = 0f;
     }
 
+    private bool HasParameter(string paramName)
+    {
+        if (anim == null) return false;
+        foreach (AnimatorControllerParameter param in anim.parameters)
+        {
+            if (param.name == paramName) return true;
+        }
+        return false;
+    }
+
     private void UpdateAnimationState()
     {
         MovementState state;
 
         // Balik arah sprite (Flip Horizontal)
-        if (dirX > 0f)
+        // Jika sedang menembak, hadapkan karakter ke arah kursor mouse
+        if (isShooting && mainCam != null && Mouse.current != null)
         {
-            sprite.flipX = false;
+            Vector3 mousePos = mainCam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            if (mousePos.x > transform.position.x)
+                sprite.flipX = false;
+            else if (mousePos.x < transform.position.x)
+                sprite.flipX = true;
         }
-        else if (dirX < 0f)
+        else
         {
-            sprite.flipX = true;
+            // Jika tidak menembak, hadap sesuai arah jalan
+            if (dirX > 0f)
+                sprite.flipX = false;
+            else if (dirX < 0f)
+                sprite.flipX = true;
         }
 
         // Penentuan State Animasi
         if (isGrounded)
         {
             if (dirX != 0f)
-                state = MovementState.running;
+            {
+                if (isRunning)
+                {
+                    state = MovementState.running; // state = 1 (Lari saat tahan Shift)
+                }
+                else
+                {
+                    state = useWalkAnimation ? MovementState.walking : MovementState.running; // state = 5 (Jalan) atau fallback 1
+                }
+            }
             else
-                state = MovementState.idle;
+            {
+                state = MovementState.idle; // state = 0
+            }
         }
         else
         {
-            if (rb.linearVelocity.y > 0.1f)
+            // Saat di udara
+            if (isDoubleJumping)
+            {
+                state = MovementState.doubleJump;
+                // Jika mulai jatuh ke bawah, otomatis ganti ke falling
+                if (rb.linearVelocity.y <= 0f)
+                {
+                    isDoubleJumping = false;
+                    state = MovementState.falling;
+                }
+            }
+            else if (rb.linearVelocity.y > 0.1f)
+            {
                 state = MovementState.jumping;
+            }
             else
+            {
                 state = MovementState.falling;
+            }
         }
 
+        // Kirim status ke Animator
         if (anim != null)
         {
             anim.SetInteger("state", (int)state);
+
+            // Hanya set isShooting jika parameternya sudah dibuat di Animator agar tidak muncul error
+            if (HasParameter("isShooting"))
+            {
+                anim.SetBool("isShooting", isShooting);
+            }
         }
     }
 
