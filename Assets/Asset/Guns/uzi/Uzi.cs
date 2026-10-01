@@ -12,6 +12,8 @@ public class Uzi : MonoBehaviour
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireRate = 0.08f; // Sangat cepat untuk Uzi
     [SerializeField] private float spreadAngle = 15f; // Semakin besar angkanya, semakin acak arah pelurunya
+    [Tooltip("Jarak maksimal peluru Uzi sebelum menghilang (dalam unit kotak, misal 10 unit)")]
+    [SerializeField] private float bulletRange = 10f;
 
     [Header("VFX Settings")]
     [SerializeField] private GameObject muzzleFlashPrefab;
@@ -29,6 +31,26 @@ public class Uzi : MonoBehaviour
         mainCam = Camera.main;
         gunSprite = GetComponent<SpriteRenderer>();
         gunAnim = GetComponent<Animator>(); 
+    }
+
+    private void Start()
+    {
+        FindPlayerIfNeeded();
+    }
+
+    private void OnEnable()
+    {
+        FindPlayerIfNeeded();
+    }
+
+    private void FindPlayerIfNeeded()
+    {
+        if (mainCam == null) mainCam = Camera.main;
+        if (playerTransform == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) playerTransform = player.transform;
+        }
     }
 
     private void Update()
@@ -77,7 +99,12 @@ public class Uzi : MonoBehaviour
         Quaternion bulletRotation = Quaternion.Euler(0, 0, firePoint.eulerAngles.z + randomAngle);
 
         // Memunculkan peluru dengan rotasi yang sudah diacak
-        Instantiate(bulletPrefab, firePoint.position, bulletRotation);
+        GameObject bulletObj = Instantiate(bulletPrefab, firePoint.position, bulletRotation);
+        Bullet bullet = bulletObj.GetComponent<Bullet>();
+        if (bullet != null)
+        {
+            bullet.SetRange(bulletRange);
+        }
 
         if (muzzleFlashPrefab != null)
         {

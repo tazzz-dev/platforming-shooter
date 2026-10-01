@@ -13,6 +13,8 @@ public class Shotgun : MonoBehaviour
     [SerializeField] private float fireRate = 0.6f;
     [SerializeField] private int pelletsCount = 5;      // Peluru menyebar
     [SerializeField] private float spreadAngle = 15f;   // Sudut sebaran
+    [Tooltip("Jarak maksimal peluru shotgun sebelum menghilang (jarak dekat, rekomendasi: 6-7 unit)")]
+    [SerializeField] private float bulletRange = 6.5f;
 
 
     [Header("VFX Settings")]
@@ -26,6 +28,26 @@ public class Shotgun : MonoBehaviour
     {
         mainCam = Camera.main;
         gunAnim = GetComponent<Animator>();
+    }
+
+    private void Start()
+    {
+        FindPlayerIfNeeded();
+    }
+
+    private void OnEnable()
+    {
+        FindPlayerIfNeeded();
+    }
+
+    private void FindPlayerIfNeeded()
+    {
+        if (mainCam == null) mainCam = Camera.main;
+        if (playerTransform == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) playerTransform = player.transform;
+        }
     }
 
     private void Update()
@@ -66,7 +88,12 @@ public class Shotgun : MonoBehaviour
         {
             float randomSpread = Random.Range(-spreadAngle, spreadAngle);
             Quaternion spreadRotation = firePoint.rotation * Quaternion.Euler(0f, 0f, randomSpread);
-            Instantiate(bulletPrefab, firePoint.position, spreadRotation);
+            GameObject bulletObj = Instantiate(bulletPrefab, firePoint.position, spreadRotation);
+            Bullet bullet = bulletObj.GetComponent<Bullet>();
+            if (bullet != null)
+            {
+                bullet.SetRange(bulletRange);
+            }
         }
 
         // 2. Spawn Efek Muzzle Flash (1x Tembak)

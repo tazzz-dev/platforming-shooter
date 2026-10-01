@@ -17,7 +17,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3795264122190517484
 Transform:
   m_ObjectHideFlags: 0
@@ -109,9 +109,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Uzi
   playerTransform: {fileID: 0}
   orbitDistance: 0.8
-  bulletPrefab: {fileID: 5209672438203111717}
+  bulletPrefab: {fileID: 2823635180420667633, guid: a3bf8c582aef36747827866f3e39afb1, type: 3}
   firePoint: {fileID: 4962711031991124979}
   fireRate: 0.08
+  spreadAngle: 15
   muzzleFlashPrefab: {fileID: 7247903250093448756}
   gunScale: {x: 0.5, y: 0.5, z: 1}
 --- !u!1 &3280612974494051271

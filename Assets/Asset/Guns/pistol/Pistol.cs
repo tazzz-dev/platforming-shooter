@@ -10,7 +10,10 @@ public class Pistol : MonoBehaviour
     [Header("Weapon Settings")]
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
-    [SerializeField] private float fireRate = 0.15f;
+    [Tooltip("Jeda interval minimal antar tembakan/tap (dalam detik). 0.25s = maksimal 4 peluru per detik")]
+    [SerializeField] private float fireRate = 0.25f;
+    [Tooltip("Jarak maksimal peluru pistol sebelum menghilang (dalam unit kotak)")]
+    [SerializeField] private float bulletRange = 14f;
 
     [Header("VFX Settings")]
     [SerializeField] private GameObject muzzleFlashPrefab;
@@ -28,11 +31,32 @@ public class Pistol : MonoBehaviour
         gunAnim = GetComponent<Animator>();
     }
 
+    private void Start()
+    {
+        FindPlayerIfNeeded();
+    }
+
+    private void OnEnable()
+    {
+        FindPlayerIfNeeded();
+    }
+
+    private void FindPlayerIfNeeded()
+    {
+        if (mainCam == null) mainCam = Camera.main;
+        if (playerTransform == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) playerTransform = player.transform;
+        }
+    }
+
     private void Update()
     {
         HandleOrbitAndAim();
 
-        if (Mouse.current.leftButton.isPressed && Time.time >= nextFireTime)
+        // Menggunakan wasPressedThisFrame agar harus di-tap (semi-otomatis), tidak bisa ditahan
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && Time.time >= nextFireTime)
         {
             Shoot();
             nextFireTime = Time.time + fireRate;
@@ -66,7 +90,12 @@ public class Pistol : MonoBehaviour
     {
         if (bulletPrefab == null || firePoint == null) return;
 
-        Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        GameObject bulletObj = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        Bullet bullet = bulletObj.GetComponent<Bullet>();
+        if (bullet != null)
+        {
+            bullet.SetRange(bulletRange);
+        }
 
         if (muzzleFlashPrefab != null)
         {
