@@ -76,7 +76,39 @@ public class PlayerHealth : MonoBehaviour
     private void Die()
     {
         Debug.Log("Player Mati!");
-        // Logika kematian (misal: Reload Scene / Animasi Mati)
-        gameObject.SetActive(false);
+
+        // Jika ada sistem respawn, gunakan itu. Jika tidak, nonaktifkan saja.
+        if (PlayerRespawn.Instance != null)
+        {
+            // Nonaktifkan Player sementara, lalu biarkan PlayerRespawn yang mengaktifkan kembali
+            gameObject.SetActive(false);
+            PlayerRespawn.Instance.Respawn();
+        }
+        else
+        {
+            // Fallback: nonaktifkan saja jika tidak ada PlayerRespawn di scene
+            gameObject.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// Reset health ke maksimum. Dipanggil oleh PlayerRespawn saat respawn.
+    /// </summary>
+    public void ResetHealth()
+    {
+        currentHealth = maxHealth;
+
+        // Pastikan sprite kembali normal (tidak sedang efek kedip)
+        StopAllCoroutines();
+        isImmune = false;
+
+        if (spriteRenderer != null)
+        {
+            Color color = spriteRenderer.color;
+            color.a = 1f;
+            spriteRenderer.color = color;
+        }
+
+        Debug.Log($"[PlayerHealth] Health direset ke {maxHealth}");
     }
 }
