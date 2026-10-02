@@ -45,6 +45,9 @@ public class PlayerMovement : MonoBehaviour
     private float shootTimer = 0f;
     private bool isShooting;
 
+    // Variabel untuk Drop-Through Platform
+    private Collider2D playerCollider;
+
     // Enum State Animasi
     // 0: idle, 1: running, 2: jumping, 3: falling, 4: doubleJump, 5: walking
     private enum MovementState { idle, running, jumping, falling, doubleJump, walking }
@@ -54,6 +57,7 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
+        playerCollider = GetComponent<Collider2D>();
         mainCam = Camera.main;
         
         // Simpan nilai gravitasi asli agar bisa dikembalikan setelah dash
@@ -131,6 +135,12 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        // 6. Drop-Through Platform: Tekan S saat berdiri di atas DropThroughPlatform
+        if (isGrounded && (Keyboard.current.sKey.wasPressedThisFrame || Keyboard.current.downArrowKey.wasPressedThisFrame))
+        {
+            TryDropThroughPlatform();
+        }
+
         UpdateAnimationState();
     }
 
@@ -150,6 +160,34 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             isShooting = false;
+        }
+    }
+
+    /// <summary>
+    /// Cek apakah di bawah player ada DropThroughPlatform.
+    /// Jika ya, panggil DropThrough agar player jatuh menembus platform.
+    /// </summary>
+    private void TryDropThroughPlatform()
+    {
+        // Raycast ke bawah dari posisi GroundCheck untuk mendeteksi DropThroughPlatform
+        RaycastHit2D[] hits = Physics2D.RaycastAll(
+            groundCheck != null ? groundCheck.position : transform.position,
+            Vector2.down,
+            groundCheckRadius + 0.3f,
+            groundLayer
+        );
+
+        foreach (RaycastHit2D hit in hits)
+        {
+            if (hit.collider == null) continue;
+
+            DropThroughPlatform dropPlatform = hit.collider.GetComponent<DropThroughPlatform>();
+            if (dropPlatform != null && playerCollider != null)
+            {
+                dropPlatform.DropThrough(playerCollider);
+                Debug.Log("[PlayerMovement] Drop melalui platform!");
+                return;
+            }
         }
     }
 
