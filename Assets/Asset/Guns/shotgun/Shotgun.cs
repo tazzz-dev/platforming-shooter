@@ -20,6 +20,9 @@ public class Shotgun : MonoBehaviour
     [Header("VFX Settings")]
     [SerializeField] private GameObject muzzleFlashPrefab; // Tambahkan ini di bagian atas kelas
 
+    [Header("Scale Settings")]
+    [SerializeField] private Vector3 gunScale = new Vector3(1f, 1f, 1f);
+
     private float nextFireTime = 0f;
     private Camera mainCam;
     private Animator gunAnim;
@@ -74,9 +77,9 @@ public class Shotgun : MonoBehaviour
         float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
 
-        // Flip visual tanpa merusak pixel art (Scale tetap 1,1,1)
-        if (Mathf.Abs(angle) > 90f) transform.localScale = new Vector3(1f, -1f, 1f);
-        else transform.localScale = new Vector3(1f, 1f, 1f);
+        // Flip visual menggunakan gunScale agar bisa diatur di Inspector
+        if (Mathf.Abs(angle) > 90f) transform.localScale = new Vector3(gunScale.x, -gunScale.y, gunScale.z);
+        else transform.localScale = gunScale;
     }
 
     private void Shoot()
