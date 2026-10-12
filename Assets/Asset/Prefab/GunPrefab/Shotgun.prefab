@@ -144,7 +144,12 @@ MonoBehaviour:
   fireRate: 0.6
   pelletsCount: 5
   spreadAngle: 12
+  bulletRange: 6.5
+  maxAmmo: 4
+  reloadTime: 1.8
+  allowManualReload: 1
   muzzleFlashPrefab: {fileID: 6090302524829608400, guid: b1d7f34d132add04399cb22568b3fd6e, type: 3}
+  gunScale: {x: 2, y: 2, z: 1}
 --- !u!95 &9073099484078174672
 Animator:
   serializedVersion: 7

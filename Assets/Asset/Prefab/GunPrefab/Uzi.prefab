@@ -113,8 +113,12 @@ MonoBehaviour:
   firePoint: {fileID: 4962711031991124979}
   fireRate: 0.08
   spreadAngle: 15
+  bulletRange: 10
+  maxAmmo: 25
+  reloadTime: 1.5
+  allowManualReload: 1
   muzzleFlashPrefab: {fileID: 7247903250093448756}
-  gunScale: {x: 0.5, y: 0.5, z: 1}
+  gunScale: {x: 1.5, y: 1.5, z: 1}
 --- !u!1 &3280612974494051271
 GameObject:
   m_ObjectHideFlags: 0
