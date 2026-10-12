@@ -19,49 +19,113 @@ using UnityEngine;
 [RequireComponent(typeof(PlatformEffector2D))]
 public class DropThroughPlatform : MonoBehaviour
 {
-    [Tooltip("Berapa lama (detik) player menembus platform saat drop-down.")]
-    [SerializeField] private float dropDuration = 0.3f;
+    [Tooltip("Berapa lama (detik) platform terbuka saat player drop-down.")]
+    [SerializeField] private float dropDuration = 0.45f;
 
     private PlatformEffector2D effector;
     private Collider2D platformCollider;
+    private CompositeCollider2D compositeCollider;
+    private Coroutine dropRoutine;
 
-    public Collider2D PlatformCollider => platformCollider;
+    public Collider2D PlatformCollider => (platformCollider != null) ? platformCollider : compositeCollider;
 
     private void Awake()
     {
+        SetupEffector();
+    }
+
+    private void OnValidate()
+    {
+        SetupEffector();
+    }
+
+    private void SetupEffector()
+    {
         effector = GetComponent<PlatformEffector2D>();
-
-        // Cari Collider2D apapun yang ada (BoxCollider2D, TilemapCollider2D, dll)
-        platformCollider = GetComponent<Collider2D>();
-
-        if (platformCollider == null)
+        if (effector != null)
         {
-            Debug.LogError("[DropThroughPlatform] Tidak ada Collider2D di GameObject ini! Tambahkan TilemapCollider2D atau BoxCollider2D terlebih dahulu.");
+            effector.useOneWay = true;
+            effector.surfaceArc = 160f;
+            effector.useOneWayGrouping = true;
+            effector.rotationalOffset = 0f;
+        }
+
+        compositeCollider = GetComponent<CompositeCollider2D>();
+        if (compositeCollider != null)
+        {
+            compositeCollider.usedByEffector = true;
             return;
         }
-        effector.surfaceArc = 180f;
-        effector.useOneWayGrouping = true;
 
-        platformCollider.usedByEffector = true;
+        platformCollider = GetComponent<Collider2D>();
+        if (platformCollider != null)
+        {
+            platformCollider.usedByEffector = true;
+        }
     }
 
     /// <summary>
     /// Dipanggil oleh PlayerMovement saat player tekan S di atas platform ini.
-    /// Sementara menonaktifkan tabrakan antara player dan platform selama dropDuration detik.
+    /// Membalik rotationalOffset PlatformEffector2D sehingga player otomatis jatuh menembus ke bawah.
     /// </summary>
     public void DropThrough(Collider2D playerCollider)
     {
-        StartCoroutine(DropRoutine(playerCollider));
+        if (dropRoutine != null)
+        {
+            StopCoroutine(dropRoutine);
+        }
+        dropRoutine = StartCoroutine(DropRoutine(playerCollider));
     }
 
     private IEnumerator DropRoutine(Collider2D playerCollider)
     {
-        // Abaikan collision antara player dan platform ini sementara
-        Physics2D.IgnoreCollision(playerCollider, platformCollider, true);
+        if (effector == null) effector = GetComponent<PlatformEffector2D>();
+
+        // Ambil SEMUA collider yang ada pada player (body, feet, dll)
+        Collider2D[] allPlayerColliders = (playerCollider != null) 
+            ? playerCollider.transform.root.GetComponentsInChildren<Collider2D>() 
+            : new Collider2D[0];
+
+        Collider2D activeCol = (compositeCollider != null) ? compositeCollider : platformCollider;
+
+        // 1. Matikan collision untuk semua collider player
+        if (activeCol != null)
+        {
+            foreach (var col in allPlayerColliders)
+            {
+                if (col != null && col.enabled)
+                {
+                    Physics2D.IgnoreCollision(col, activeCol, true);
+                }
+            }
+        }
+
+        // 2. Putar arah solid effector (180 derajat)
+        if (effector != null)
+        {
+            effector.rotationalOffset = 180f;
+        }
 
         yield return new WaitForSeconds(dropDuration);
 
-        // Aktifkan kembali collision
-        Physics2D.IgnoreCollision(playerCollider, platformCollider, false);
+        // 3. Kembalikan arah effector ke semula
+        if (effector != null)
+        {
+            effector.rotationalOffset = 0f;
+        }
+
+        // 4. Nyalakan kembali collision
+        if (activeCol != null)
+        {
+            foreach (var col in allPlayerColliders)
+            {
+                if (col != null)
+                {
+                    Physics2D.IgnoreCollision(col, activeCol, false);
+                }
+            }
+        }
+
+        dropRoutine = null;
     }
 }

@@ -19,20 +19,41 @@ public class OneWayPlatform : MonoBehaviour
 
     private void Awake()
     {
+        SetupEffector();
+    }
+
+    private void OnValidate()
+    {
+        SetupEffector();
+    }
+
+    private void SetupEffector()
+    {
         effector = GetComponent<PlatformEffector2D>();
-
-        // Cari Collider2D apapun yang ada (BoxCollider2D, TilemapCollider2D, dll)
-        platformCollider = GetComponent<Collider2D>();
-
-        if (platformCollider == null)
+        if (effector != null)
         {
-            Debug.LogError("[OneWayPlatform] Tidak ada Collider2D di GameObject ini! Tambahkan TilemapCollider2D atau BoxCollider2D terlebih dahulu.");
+            effector.useOneWay = true;
+            effector.surfaceArc = 160f; // 160 derajat memastikan hanya atas yang solid
+            effector.useOneWayGrouping = true;
+        }
+
+        // Cari Composite Collider jika ada di Tilemap
+        CompositeCollider2D composite = GetComponent<CompositeCollider2D>();
+        if (composite != null)
+        {
+            composite.usedByEffector = true;
             return;
         }
-        effector.surfaceArc = 180f; // Hanya sisi atas yang solid
-        effector.useOneWayGrouping = true;
 
-        // Collider harus pakai effector
-        platformCollider.usedByEffector = true;
+        // Jika tidak pakai composite, cari Collider2D biasa (TilemapCollider2D / BoxCollider2D)
+        platformCollider = GetComponent<Collider2D>();
+        if (platformCollider != null)
+        {
+            platformCollider.usedByEffector = true;
+        }
+        else
+        {
+            Debug.LogError("[OneWayPlatform] Tidak ada Collider2D atau CompositeCollider2D di GameObject ini!");
+        }
     }
 }
