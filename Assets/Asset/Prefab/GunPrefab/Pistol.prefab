@@ -164,5 +164,9 @@ MonoBehaviour:
   bulletPrefab: {fileID: 2823635180420667633, guid: a3bf8c582aef36747827866f3e39afb1, type: 3}
   firePoint: {fileID: 4428854120501480977}
   fireRate: 0.15
+  bulletRange: 14
+  maxAmmo: 7
+  reloadTime: 1
+  allowManualReload: 1
   muzzleFlashPrefab: {fileID: 6090302524829608400, guid: b1d7f34d132add04399cb22568b3fd6e, type: 3}
-  gunScale: {x: 1, y: 1, z: 1}
+  gunScale: {x: 1.5, y: 1.5, z: 1}

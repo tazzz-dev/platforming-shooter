@@ -15,20 +15,33 @@ public class Pistol : MonoBehaviour
     [Tooltip("Jarak maksimal peluru pistol sebelum menghilang (dalam unit kotak)")]
     [SerializeField] private float bulletRange = 14f;
 
+    [Header("Ammo & Reload Settings")]
+    [SerializeField] private int maxAmmo = 7;
+    [SerializeField] private float reloadTime = 1f;
+    [SerializeField] private bool allowManualReload = true;
+
     [Header("VFX Settings")]
     [SerializeField] private GameObject muzzleFlashPrefab;
 
     [Header("Scale Settings")]
     [SerializeField] private Vector3 gunScale = new Vector3(1f, 1f, 1f);
 
+    private int currentAmmo;
+    private bool isReloading = false;
+    private Coroutine reloadCoroutine;
     private float nextFireTime = 0f;
     private Camera mainCam;
     private Animator gunAnim;
+
+    public int CurrentAmmo => currentAmmo;
+    public int MaxAmmo => maxAmmo;
+    public bool IsReloading => isReloading;
 
     private void Awake()
     {
         mainCam = Camera.main;
         gunAnim = GetComponent<Animator>();
+        currentAmmo = maxAmmo;
     }
 
     private void Start()
@@ -39,6 +52,22 @@ public class Pistol : MonoBehaviour
     private void OnEnable()
     {
         FindPlayerIfNeeded();
+        // Reset status reload jika senjata diaktifkan kembali
+        isReloading = false;
+        if (currentAmmo <= 0)
+        {
+            StartReload();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (reloadCoroutine != null)
+        {
+            StopCoroutine(reloadCoroutine);
+            reloadCoroutine = null;
+        }
+        isReloading = false;
     }
 
     private void FindPlayerIfNeeded()
@@ -55,12 +84,51 @@ public class Pistol : MonoBehaviour
     {
         HandleOrbitAndAim();
 
+        // Manual Reload menggunakan tombol R
+        if (allowManualReload && Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            if (!isReloading && currentAmmo < maxAmmo)
+            {
+                StartReload();
+                return;
+            }
+        }
+
+        // Jika sedang reload, tidak bisa menembak
+        if (isReloading) return;
+
         // Menggunakan wasPressedThisFrame agar harus di-tap (semi-otomatis), tidak bisa ditahan
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && Time.time >= nextFireTime)
         {
-            Shoot();
-            nextFireTime = Time.time + fireRate;
+            if (currentAmmo > 0)
+            {
+                Shoot();
+                nextFireTime = Time.time + fireRate;
+            }
+            else
+            {
+                StartReload();
+            }
         }
+    }
+
+    public void StartReload()
+    {
+        if (isReloading || currentAmmo >= maxAmmo) return;
+        reloadCoroutine = StartCoroutine(ReloadRoutine());
+    }
+
+    private System.Collections.IEnumerator ReloadRoutine()
+    {
+        isReloading = true;
+        Debug.Log($"[Pistol] Sedang reload... ({reloadTime} detik)");
+
+        yield return new WaitForSeconds(reloadTime);
+
+        currentAmmo = maxAmmo;
+        isReloading = false;
+        reloadCoroutine = null;
+        Debug.Log("[Pistol] Reload selesai! Amunisi penuh.");
     }
 
     private void HandleOrbitAndAim()
@@ -90,6 +158,8 @@ public class Pistol : MonoBehaviour
     {
         if (bulletPrefab == null || firePoint == null) return;
 
+        currentAmmo--;
+
         GameObject bulletObj = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         Bullet bullet = bulletObj.GetComponent<Bullet>();
         if (bullet != null)
@@ -105,6 +175,12 @@ public class Pistol : MonoBehaviour
         if (gunAnim != null)
         {
             gunAnim.SetTrigger("shoot");
+        }
+
+        // Jika peluru habis setelah tembakan ini, langsung mulai reload
+        if (currentAmmo <= 0)
+        {
+            StartReload();
         }
     }
 }

@@ -15,22 +15,35 @@ public class Uzi : MonoBehaviour
     [Tooltip("Jarak maksimal peluru Uzi sebelum menghilang (dalam unit kotak, misal 10 unit)")]
     [SerializeField] private float bulletRange = 10f;
 
+    [Header("Ammo & Reload Settings")]
+    [SerializeField] private int maxAmmo = 25;
+    [SerializeField] private float reloadTime = 1.5f;
+    [SerializeField] private bool allowManualReload = true;
+
     [Header("VFX Settings")]
     [SerializeField] private GameObject muzzleFlashPrefab;
 
     [Header("Scale Settings")]
     [SerializeField] private Vector3 gunScale = new Vector3(0.4f, 0.4f, 1f); 
 
+    private int currentAmmo;
+    private bool isReloading = false;
+    private Coroutine reloadCoroutine;
     private float nextFireTime = 0f;
     private Camera mainCam;
     private SpriteRenderer gunSprite;
     private Animator gunAnim;
+
+    public int CurrentAmmo => currentAmmo;
+    public int MaxAmmo => maxAmmo;
+    public bool IsReloading => isReloading;
 
     private void Awake()
     {
         mainCam = Camera.main;
         gunSprite = GetComponent<SpriteRenderer>();
         gunAnim = GetComponent<Animator>(); 
+        currentAmmo = maxAmmo;
     }
 
     private void Start()
@@ -41,6 +54,21 @@ public class Uzi : MonoBehaviour
     private void OnEnable()
     {
         FindPlayerIfNeeded();
+        isReloading = false;
+        if (currentAmmo <= 0)
+        {
+            StartReload();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (reloadCoroutine != null)
+        {
+            StopCoroutine(reloadCoroutine);
+            reloadCoroutine = null;
+        }
+        isReloading = false;
     }
 
     private void FindPlayerIfNeeded()
@@ -57,12 +85,51 @@ public class Uzi : MonoBehaviour
     {
         HandleOrbitAndAim();
 
-        // Menggunakan isPressed agar bisa diberondong (ditahan)
-        if (Mouse.current.leftButton.isPressed && Time.time >= nextFireTime)
+        // Manual Reload menggunakan tombol R
+        if (allowManualReload && Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
         {
-            Shoot();
-            nextFireTime = Time.time + fireRate;
+            if (!isReloading && currentAmmo < maxAmmo)
+            {
+                StartReload();
+                return;
+            }
         }
+
+        // Jangan izinkan menembak saat sedang reload
+        if (isReloading) return;
+
+        // Menggunakan isPressed agar bisa diberondong (ditahan)
+        if (Mouse.current != null && Mouse.current.leftButton.isPressed && Time.time >= nextFireTime)
+        {
+            if (currentAmmo > 0)
+            {
+                Shoot();
+                nextFireTime = Time.time + fireRate;
+            }
+            else
+            {
+                StartReload();
+            }
+        }
+    }
+
+    public void StartReload()
+    {
+        if (isReloading || currentAmmo >= maxAmmo) return;
+        reloadCoroutine = StartCoroutine(ReloadRoutine());
+    }
+
+    private System.Collections.IEnumerator ReloadRoutine()
+    {
+        isReloading = true;
+        Debug.Log($"[Uzi] Sedang reload... ({reloadTime} detik)");
+
+        yield return new WaitForSeconds(reloadTime);
+
+        currentAmmo = maxAmmo;
+        isReloading = false;
+        reloadCoroutine = null;
+        Debug.Log("[Uzi] Reload selesai! Amunisi penuh.");
     }
 
     private void HandleOrbitAndAim()
@@ -94,6 +161,8 @@ public class Uzi : MonoBehaviour
     {
         if (bulletPrefab == null || firePoint == null) return;
 
+        currentAmmo--;
+
         // Menghitung rotasi acak (spread)
         float randomAngle = Random.Range(-spreadAngle / 2f, spreadAngle / 2f);
         Quaternion bulletRotation = Quaternion.Euler(0, 0, firePoint.eulerAngles.z + randomAngle);
@@ -115,6 +184,12 @@ public class Uzi : MonoBehaviour
         if (gunAnim != null)
         {
             gunAnim.SetTrigger("shoot");
+        }
+
+        // Jika peluru habis setelah tembakan ini, langsung mulai reload
+        if (currentAmmo <= 0)
+        {
+            StartReload();
         }
     }
 }
