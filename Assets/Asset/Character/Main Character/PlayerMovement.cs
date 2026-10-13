@@ -49,8 +49,8 @@ public class PlayerMovement : MonoBehaviour
     private Collider2D playerCollider;
 
     // Enum State Animasi
-    // 0: idle, 1: running, 2: jumping, 3: falling, 4: doubleJump, 5: walking
-    private enum MovementState { idle, running, jumping, falling, doubleJump, walking }
+    // 0: idle, 1: running, 2: jumping, 3: falling, 4: doubleJump, 5: walking, 6: airShoot (jatuh + tembak)
+    private enum MovementState { idle, running, jumping, falling, doubleJump, walking, airShoot }
 
     private void Awake()
     {
@@ -109,10 +109,13 @@ public class PlayerMovement : MonoBehaviour
         // Pengecekan Tanah (Grounded)
         if (groundCheck != null)
         {
-            bool wasGrounded = isGrounded;
-            isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+            // isGrounded hanya true jika:
+            // 1. Ada kolider ground di bawah, DAN
+            // 2. Player tidak sedang bergerak ke atas (supaya melewati one-way platform dari bawah tidak dianggap grounded)
+            bool overlapGround = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+            isGrounded = overlapGround && rb.linearVelocity.y <= 0.05f;
 
-            // Jika baru mendarat di tanah, reset kemampuan lompat kedua
+            // Jika mendarat, reset kemampuan double jump
             if (isGrounded)
             {
                 canDoubleJump = true;
@@ -276,10 +279,12 @@ public class PlayerMovement : MonoBehaviour
             else if (rb.linearVelocity.y > 0.1f)
             {
                 state = MovementState.jumping;
+                // Saat naik + tembak: biarkan Animator handle via isShooting bool
             }
             else
             {
-                state = MovementState.falling;
+                // Saat jatuh + tembak: gunakan state airShoot (6) agar Animator bisa bedakan
+                state = isShooting ? MovementState.airShoot : MovementState.falling;
             }
         }
 

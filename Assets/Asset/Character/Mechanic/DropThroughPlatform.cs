@@ -32,6 +32,13 @@ public class DropThroughPlatform : MonoBehaviour
     private void Awake()
     {
         SetupEffector();
+
+        // Pastikan platform selalu solid saat scene dimulai
+        // (mencegah stuck di 180° jika game di-stop saat coroutine drop sedang berjalan)
+        if (effector != null)
+        {
+            effector.rotationalOffset = 0f;
+        }
     }
 
     private void OnValidate()
