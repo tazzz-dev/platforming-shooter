@@ -23,6 +23,10 @@ public class Pistol : MonoBehaviour
     [Header("VFX Settings")]
     [SerializeField] private GameObject muzzleFlashPrefab;
 
+    [Header("Audio Settings")]
+    [SerializeField] private AudioClip shootSound;
+    [SerializeField] [Range(0f, 1f)] private float shootVolume = 1f;
+
     [Header("Scale Settings")]
     [SerializeField] private Vector3 gunScale = new Vector3(1f, 1f, 1f);
 
@@ -32,6 +36,7 @@ public class Pistol : MonoBehaviour
     private float nextFireTime = 0f;
     private Camera mainCam;
     private Animator gunAnim;
+    private AudioSource audioSource;
 
     public int CurrentAmmo => currentAmmo;
     public int MaxAmmo => maxAmmo;
@@ -41,6 +46,13 @@ public class Pistol : MonoBehaviour
     {
         mainCam = Camera.main;
         gunAnim = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+        audioSource.playOnAwake = false;
+
         currentAmmo = maxAmmo;
     }
 
@@ -177,6 +189,12 @@ public class Pistol : MonoBehaviour
         if (gunAnim != null)
         {
             gunAnim.SetTrigger("shoot");
+        }
+
+        // Mainkan SFX tembakan
+        if (shootSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(shootSound, shootVolume);
         }
 
         // Jika peluru habis setelah tembakan ini, langsung mulai reload
