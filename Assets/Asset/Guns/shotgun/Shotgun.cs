@@ -83,6 +83,8 @@ public class Shotgun : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale == 0f) return;
+
         HandleOrbitAndAim();
 
         // Manual Reload menggunakan tombol R

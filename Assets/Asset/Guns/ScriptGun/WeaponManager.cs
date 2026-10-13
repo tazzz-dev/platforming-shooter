@@ -80,6 +80,8 @@ public class WeaponManager : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale == 0f) return;
+
         HandleNumberInput();
 
         if (allowMouseScroll)

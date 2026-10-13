@@ -30,6 +30,8 @@ public class EnemyPistol : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale == 0f) return;
+
         if (playerTransform == null || enemyBodyTransform == null) return;
 
         float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);

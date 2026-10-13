@@ -82,6 +82,8 @@ public class Pistol : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale == 0f) return;
+
         HandleOrbitAndAim();
 
         // Manual Reload menggunakan tombol R

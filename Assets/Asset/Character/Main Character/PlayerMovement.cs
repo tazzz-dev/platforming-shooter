@@ -66,6 +66,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        // Abaikan input jika game sedang di-pause
+        if (Time.timeScale == 0f) return;
+
         // 1. Logika Dash (Saat sedang Dash, abaikan input pergerakan lain)
         if (isDashing)
         {
