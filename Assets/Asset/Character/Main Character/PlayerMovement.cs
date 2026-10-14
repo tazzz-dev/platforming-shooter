@@ -31,9 +31,25 @@ public class PlayerMovement : MonoBehaviour
     private bool isGrounded;
     private bool isRunning;
 
+    [Header("Ability Settings")]
+    [Tooltip("Apakah kemampuan Double Jump sudah terbuka? (Set false agar pemain harus mengambil item dulu)")]
+    [SerializeField] private bool hasDoubleJumpAbility = false;
+
     // Variabel untuk fitur Double Jump
     private bool canDoubleJump;
     private bool isDoubleJumping;
+
+    public bool HasDoubleJumpAbility => hasDoubleJumpAbility;
+
+    /// <summary>
+    /// Membuka kemampuan Double Jump secara permanen
+    /// </summary>
+    public void UnlockDoubleJump()
+    {
+        hasDoubleJumpAbility = true;
+        canDoubleJump = true;
+        Debug.Log("<color=green>[PlayerMovement] SELAMAT! Ability DOUBLE JUMP berhasil dibuka!</color>");
+    }
 
     // Variabel untuk fitur Dash
     private bool isDashing;
@@ -116,10 +132,10 @@ public class PlayerMovement : MonoBehaviour
             bool overlapGround = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
             isGrounded = overlapGround && rb.linearVelocity.y <= 0.05f;
 
-            // Jika mendarat, reset kemampuan double jump
+            // Jika mendarat, reset kemampuan double jump (hanya jika ability sudah terbuka)
             if (isGrounded)
             {
-                canDoubleJump = true;
+                canDoubleJump = hasDoubleJumpAbility;
                 isDoubleJumping = false;
             }
         }
@@ -131,11 +147,11 @@ public class PlayerMovement : MonoBehaviour
             {
                 // Lompatan pertama dari tanah
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-                canDoubleJump = true;
+                canDoubleJump = hasDoubleJumpAbility;
             }
-            else if (canDoubleJump)
+            else if (hasDoubleJumpAbility && canDoubleJump)
             {
-                // Lompatan kedua di udara (Double Jump)
+                // Lompatan kedua di udara (Double Jump - hanya jika ability sudah terbuka)
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, doubleJumpForce);
                 canDoubleJump = false;
                 isDoubleJumping = true;
