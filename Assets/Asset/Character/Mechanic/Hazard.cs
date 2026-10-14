@@ -2,27 +2,39 @@ using UnityEngine;
 
 public class Hazard : MonoBehaviour
 {
+    [Header("Hazard Settings")]
+    [Tooltip("Jika true, menyentuh duri/hazard ini akan langsung membunuh player seketika berapapun darahnya.")]
+    [SerializeField] private bool instantKill = true;
+
+    [Tooltip("Jumlah damage yang diberikan jika instantKill dinonaktifkan.")]
+    [SerializeField] private int damageAmount = 1;
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
-        {
-            PlayerHealth playerHealth = collision.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(1); // Mengurangi 1 darah
-            }
-        }
+        ProcessHazard(collision.gameObject);
     }
 
-    // Gunakan ini jika menggunakan Collision2D biasa (non-trigger)
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
+        ProcessHazard(collision.gameObject);
+    }
+
+    private void ProcessHazard(GameObject target)
+    {
+        // Cek apakah yang menyentuh adalah Player (baik tag maupun script Player)
+        bool isPlayer = target.CompareTag("Player") || target.GetComponentInParent<PlayerMovement>() != null;
+        if (!isPlayer) return;
+
+        PlayerHealth playerHealth = target.GetComponentInParent<PlayerHealth>();
+        if (playerHealth != null)
         {
-            PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
+            if (instantKill)
             {
-                playerHealth.TakeDamage(1);
+                playerHealth.InstantKill();
+            }
+            else
+            {
+                playerHealth.TakeDamage(damageAmount);
             }
         }
     }

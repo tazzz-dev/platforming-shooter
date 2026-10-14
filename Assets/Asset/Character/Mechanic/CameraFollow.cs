@@ -14,8 +14,36 @@ public class CameraFollow : MonoBehaviour
     [Tooltip("Seberapa halus kamera bergerak (semakin besar semakin cepat merespons)")]
     [SerializeField] private float smoothSpeed = 5f;
 
+    [Header("Zoom Settings")]
+    [Tooltip("Ukuran zoom kamera (default 7f agar lebih luas / tidak terlalu dekat). Semakin BESAR angkanya, semakin JAUH (zoom out).")]
+    [SerializeField] private float currentZoom = 7f;
+    [Tooltip("Batas maksimal zoom in (paling dekat)")]
+    [SerializeField] private float minZoom = 4f;
+    [Tooltip("Batas maksimal zoom out (paling jauh)")]
+    [SerializeField] private float maxZoom = 12f;
+    [Tooltip("Kecepatan transisi zoom")]
+    [SerializeField] private float zoomSmoothSpeed = 5f;
+
+    [Header("In-Game Zoom Controls (Optional)")]
+    [Tooltip("Jika aktif, bisa zoom in/out saat bermain dengan tombol [ / ] atau tombol + / - di keyboard")]
+    [SerializeField] private bool allowKeyboardZoom = true;
+    [SerializeField] private float keyboardZoomStep = 1f;
+
+    private Camera cam;
+
+    private void Awake()
+    {
+        cam = GetComponent<Camera>();
+        if (cam != null && cam.orthographic)
+        {
+            cam.orthographicSize = currentZoom;
+        }
+    }
+
     private void Start()
     {
+        if (cam == null) cam = GetComponent<Camera>();
+
         // Otomatis mencari Player jika belum dipasang di Inspector
         if (target == null)
         {
@@ -59,6 +87,43 @@ public class CameraFollow : MonoBehaviour
 
         // Geser posisi kamera dengan halus (Smooth Lerp)
         transform.position = Vector3.Lerp(transform.position, desiredPos, smoothSpeed * Time.deltaTime);
+
+        // 3. Kontrol Zooming
+        HandleZoom();
+    }
+
+    private void HandleZoom()
+    {
+        if (cam == null) return;
+
+        // Input keyboard in-game jika diaktifkan (New Input System)
+        if (allowKeyboardZoom && UnityEngine.InputSystem.Keyboard.current != null)
+        {
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+
+            // Tombol '[' atau '-' untuk Zoom In (mendekat)
+            if (kb.leftBracketKey.wasPressedThisFrame || kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame)
+            {
+                currentZoom = Mathf.Clamp(currentZoom - keyboardZoomStep, minZoom, maxZoom);
+            }
+            // Tombol ']' atau '+' untuk Zoom Out (menjauh/lebih luas)
+            else if (kb.rightBracketKey.wasPressedThisFrame || kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame)
+            {
+                currentZoom = Mathf.Clamp(currentZoom + keyboardZoomStep, minZoom, maxZoom);
+            }
+        }
+
+        // Terapkan zoom dengan transisi halus
+        currentZoom = Mathf.Clamp(currentZoom, minZoom, maxZoom);
+        cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, currentZoom, zoomSmoothSpeed * Time.deltaTime);
+    }
+
+    /// <summary>
+    /// Ubah ukuran zoom kamera dari script lain atau event
+    /// </summary>
+    public void SetZoom(float newZoom)
+    {
+        currentZoom = Mathf.Clamp(newZoom, minZoom, maxZoom);
     }
 
     // Menampilkan kotak toleransi (Dead Zone) berwarna kuning di jendela Scene Unity

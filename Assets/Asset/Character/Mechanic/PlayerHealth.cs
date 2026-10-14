@@ -39,6 +39,19 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Membunuh player seketika berapapun sisa darahnya (misal terkena duri/spike atau jatuh ke jurang),
+    /// mengabaikan masa imun.
+    /// </summary>
+    public void InstantKill()
+    {
+        currentHealth = 0;
+        isImmune = false;
+        StopAllCoroutines();
+        Debug.Log("[PlayerHealth] Player terkena Instant Kill (Spike/Hazard)!");
+        Die();
+    }
+
     // Coroutine untuk mengaktifkan timer imun & efek kelip-kelip visual
     private IEnumerator ImmunityRoutine()
     {
