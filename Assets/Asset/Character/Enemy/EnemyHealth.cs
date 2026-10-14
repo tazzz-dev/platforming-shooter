@@ -13,6 +13,9 @@ public class EnemyHealth : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private EnemySpriteAnimator spriteAnimator;
 
+    // Event statis setiap kali ada musuh yang terbunuh
+    public static event System.Action OnEnemyKilled;
+
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -80,6 +83,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
+        OnEnemyKilled?.Invoke();
         Destroy(gameObject);
     }
 }

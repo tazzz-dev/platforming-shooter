@@ -20,11 +20,38 @@ public class WeaponManager : MonoBehaviour
     [Header("Senjata Awal")]
     [SerializeField] private int currentWeaponIndex = 0;
 
+    [Header("Sistem Unlock Senjata via Kill")]
+    [Tooltip("Jika true, Shotgun dan Uzi akan terkunci di awal permainan dan terbuka setelah membunuh musuh dalam jumlah tertentu.")]
+    [SerializeField] private bool lockWeaponsAtStart = true;
+    [Tooltip("Jumlah kill yang dibutuhkan untuk membuka Shotgun (default: 10)")]
+    [SerializeField] private int shotgunUnlockKills = 10;
+    [Tooltip("Jumlah kill yang dibutuhkan untuk membuka Uzi (default: 25)")]
+    [SerializeField] private int uziUnlockKills = 25;
+    [Tooltip("Jika true, saat senjata terbuka akan otomatis langsung dipakai")]
+    [SerializeField] private bool autoEquipOnUnlock = true;
+
     [Header("Pengaturan Input")]
     [SerializeField] private bool allowMouseScroll = true;
 
-    // Event untuk UI jika ingin menampilkan ikon/nama senjata aktif
+    // Hitungan kill saat ini
+    private int currentKillCount = 0;
+
+    public int CurrentKillCount => currentKillCount;
+
+    // Event untuk UI jika ingin menampilkan ikon/nama senjata aktif atau notifikasi unlock
     public static event Action<int, string> OnWeaponChanged;
+    public static event Action<string, int> OnWeaponUnlocked;
+    public static event Action<int> OnKillCountChanged;
+
+    private void OnEnable()
+    {
+        EnemyHealth.OnEnemyKilled += HandleEnemyKilled;
+    }
+
+    private void OnDisable()
+    {
+        EnemyHealth.OnEnemyKilled -= HandleEnemyKilled;
+    }
 
     private void Awake()
     {
@@ -74,8 +101,75 @@ public class WeaponManager : MonoBehaviour
 
     private void Start()
     {
+        // Kunci senjata sesuai aturan kill di awal permainan
+        if (lockWeaponsAtStart)
+        {
+            ApplyInitialLockState();
+        }
+
         // Pastikan hanya senjata aktif yang menyala saat mulai game
         EquipWeapon(currentWeaponIndex);
+    }
+
+    private void ApplyInitialLockState()
+    {
+        for (int i = 0; i < weapons.Count; i++)
+        {
+            // Slot 0 (Pistol) selalu terbuka sejak awal
+            if (i == 0 || weapons[i].weaponName.Equals("Pistol", StringComparison.OrdinalIgnoreCase))
+            {
+                weapons[i].isUnlocked = true;
+            }
+            else if (weapons[i].weaponName.Equals("Shotgun", StringComparison.OrdinalIgnoreCase))
+            {
+                weapons[i].isUnlocked = (currentKillCount >= shotgunUnlockKills);
+                if (!weapons[i].isUnlocked)
+                {
+                    Debug.Log($"[WeaponManager] Shotgun TERKUNCI (Butuh {shotgunUnlockKills} kill untuk unlock)");
+                }
+            }
+            else if (weapons[i].weaponName.Equals("Uzi", StringComparison.OrdinalIgnoreCase))
+            {
+                weapons[i].isUnlocked = (currentKillCount >= uziUnlockKills);
+                if (!weapons[i].isUnlocked)
+                {
+                    Debug.Log($"[WeaponManager] Uzi TERKUNCI (Butuh {uziUnlockKills} kill untuk unlock)");
+                }
+            }
+        }
+    }
+
+    private void HandleEnemyKilled()
+    {
+        currentKillCount++;
+        Debug.Log($"[WeaponManager] Musuh terbunuh! Total Kill: {currentKillCount}");
+        OnKillCountChanged?.Invoke(currentKillCount);
+
+        // 1. Cek Unlock Shotgun (setelah 10 kill)
+        if (currentKillCount >= shotgunUnlockKills && !IsWeaponNameUnlocked("Shotgun"))
+        {
+            UnlockWeaponByName("Shotgun", autoEquipOnUnlock);
+            OnWeaponUnlocked?.Invoke("Shotgun", shotgunUnlockKills);
+            Debug.Log($"<color=yellow>[WeaponManager] SELAMAT! SHOTGUN TERBUKA setelah {shotgunUnlockKills} kill!</color>");
+        }
+
+        // 2. Cek Unlock Uzi (setelah 25 kill)
+        if (currentKillCount >= uziUnlockKills && !IsWeaponNameUnlocked("Uzi"))
+        {
+            UnlockWeaponByName("Uzi", autoEquipOnUnlock);
+            OnWeaponUnlocked?.Invoke("Uzi", uziUnlockKills);
+            Debug.Log($"<color=cyan>[WeaponManager] SELAMAT! UZI TERBUKA setelah {uziUnlockKills} kill!</color>");
+        }
+    }
+
+    public bool IsWeaponNameUnlocked(string weaponName)
+    {
+        for (int i = 0; i < weapons.Count; i++)
+        {
+            if (weapons[i].weaponName.Equals(weaponName, StringComparison.OrdinalIgnoreCase))
+                return weapons[i].isUnlocked;
+        }
+        return false;
     }
 
     private void Update()
