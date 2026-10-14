@@ -107,19 +107,13 @@ public class DropThroughPlatform : MonoBehaviour
             }
         }
 
-        // 2. Putar arah solid effector (180 derajat)
-        if (effector != null)
-        {
-            effector.rotationalOffset = 180f;
-        }
-
+        // Jeda waktu agar player sempat jatuh menembus platform
+        // CATATAN: Jangan ubah effector.rotationalOffset = 180f di sini!
+        // Karena Tilemap dipakai bersama untuk seluruh level, membalik effector akan membuat
+        // semua musuh di seluruh scene ikut jatuh menembus platform.
+        // Physics2D.IgnoreCollision di atas sudah cukup dan spesifik hanya untuk player.
         yield return new WaitForSeconds(dropDuration);
 
-        // 3. Kembalikan arah effector ke semula
-        if (effector != null)
-        {
-            effector.rotationalOffset = 0f;
-        }
 
         // 4. Nyalakan kembali collision
         if (activeCol != null)

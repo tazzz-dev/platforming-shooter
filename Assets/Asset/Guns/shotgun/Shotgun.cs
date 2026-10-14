@@ -48,6 +48,8 @@ public class Shotgun : MonoBehaviour
     {
         mainCam = Camera.main;
         gunAnim = GetComponent<Animator>();
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.sortingOrder = 21;
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {

@@ -58,6 +58,7 @@ public class PlayerMovement : MonoBehaviour
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
         playerCollider = GetComponent<Collider2D>();
+        if (sprite != null) sprite.sortingOrder = 20;
         mainCam = Camera.main;
         
         // Simpan nilai gravitasi asli agar bisa dikembalikan setelah dash

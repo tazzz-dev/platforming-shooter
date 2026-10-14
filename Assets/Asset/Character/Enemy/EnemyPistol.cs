@@ -15,8 +15,26 @@ public class EnemyPistol : MonoBehaviour
     [Header("VFX Settings")]
     [SerializeField] private GameObject muzzleFlashPrefab;
 
+    [Header("Burst Settings")]
+    [SerializeField] private bool useBurst = false;
+    [SerializeField] private int burstCount = 3;
+    [SerializeField] private float burstInterval = 0.14f;
+
     private float nextFireTime;
     private Transform playerTransform;
+    private bool isBursting = false;
+
+    public void ConfigureWeapon(Transform body, GameObject bullet, GameObject muzzle, float rate, float range, bool burst = false, int bCount = 3, float bInterval = 0.14f)
+    {
+        enemyBodyTransform = body;
+        enemyBulletPrefab = bullet;
+        muzzleFlashPrefab = muzzle;
+        fireRate = rate;
+        attackRange = range;
+        useBurst = burst;
+        burstCount = bCount;
+        burstInterval = bInterval;
+    }
 
     private void Start()
     {
@@ -41,12 +59,31 @@ public class EnemyPistol : MonoBehaviour
         {
             HandleAimAndOrbit();
 
-            if (Time.time >= nextFireTime)
+            if (Time.time >= nextFireTime && !isBursting)
             {
-                Shoot();
+                if (useBurst)
+                {
+                    StartCoroutine(ShootBurstRoutine());
+                }
+                else
+                {
+                    Shoot();
+                }
                 nextFireTime = Time.time + fireRate;
             }
         }
+    }
+
+    private System.Collections.IEnumerator ShootBurstRoutine()
+    {
+        isBursting = true;
+        for (int i = 0; i < burstCount; i++)
+        {
+            if (playerTransform == null || enemyBodyTransform == null) break;
+            Shoot();
+            yield return new WaitForSeconds(burstInterval);
+        }
+        isBursting = false;
     }
 
     private void HandleAimAndOrbit()

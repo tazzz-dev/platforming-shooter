@@ -47,6 +47,7 @@ public class Uzi : MonoBehaviour
     {
         mainCam = Camera.main;
         gunSprite = GetComponent<SpriteRenderer>();
+        if (gunSprite != null) gunSprite.sortingOrder = 21;
         gunAnim = GetComponent<Animator>(); 
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
