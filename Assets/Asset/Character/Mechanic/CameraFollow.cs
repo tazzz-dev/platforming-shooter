@@ -30,10 +30,20 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private float keyboardZoomStep = 1f;
 
     private Camera cam;
+    private float defaultZoom;
+    private float originalZoomSmoothSpeed;
+
+    public static CameraFollow Instance { get; private set; }
+    public float DefaultZoom => defaultZoom;
+    public float CurrentZoom => currentZoom;
 
     private void Awake()
     {
+        Instance = this;
         cam = GetComponent<Camera>();
+        defaultZoom = currentZoom;
+        originalZoomSmoothSpeed = zoomSmoothSpeed;
+
         if (cam != null && cam.orthographic)
         {
             cam.orthographicSize = currentZoom;
@@ -119,11 +129,24 @@ public class CameraFollow : MonoBehaviour
     }
 
     /// <summary>
-    /// Ubah ukuran zoom kamera dari script lain atau event
+    /// Ubah ukuran zoom kamera dari script lain atau trigger
     /// </summary>
-    public void SetZoom(float newZoom)
+    public void SetZoom(float newZoom, float? customSpeed = null)
     {
         currentZoom = Mathf.Clamp(newZoom, minZoom, maxZoom);
+        if (customSpeed.HasValue)
+        {
+            zoomSmoothSpeed = customSpeed.Value;
+        }
+    }
+
+    /// <summary>
+    /// Kembalikan zoom ke nilai default semula
+    /// </summary>
+    public void ResetZoom(float? customSpeed = null)
+    {
+        currentZoom = defaultZoom;
+        zoomSmoothSpeed = customSpeed.HasValue ? customSpeed.Value : originalZoomSmoothSpeed;
     }
 
     // Menampilkan kotak toleransi (Dead Zone) berwarna kuning di jendela Scene Unity

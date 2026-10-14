@@ -14,10 +14,18 @@ public class PlayerHealth : MonoBehaviour
     [Header("Visual Feedback (Optional)")]
     private SpriteRenderer spriteRenderer;
 
+    // Getter publik untuk UI (HealthUI / FloatingHealthBar)
+    public int CurrentHealth => currentHealth;
+    public int MaxHealth => maxHealth;
+
+    // Event saat darah berubah (current, max)
+    public static event System.Action<int, int> OnHealthChanged;
+
     private void Awake()
     {
         currentHealth = maxHealth;
         spriteRenderer = GetComponent<SpriteRenderer>();
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
     // Fungsi utama untuk menerima damage
@@ -27,7 +35,9 @@ public class PlayerHealth : MonoBehaviour
         if (isImmune) return;
 
         currentHealth -= damageAmount;
+        if (currentHealth < 0) currentHealth = 0;
         Debug.Log("Player kena Hit! Sisa Health: " + currentHealth);
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
         if (currentHealth <= 0)
         {
@@ -48,6 +58,7 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = 0;
         isImmune = false;
         StopAllCoroutines();
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
         Debug.Log("[PlayerHealth] Player terkena Instant Kill (Spike/Hazard)!");
         Die();
     }
@@ -110,6 +121,7 @@ public class PlayerHealth : MonoBehaviour
     public void ResetHealth()
     {
         currentHealth = maxHealth;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
         // Pastikan sprite kembali normal (tidak sedang efek kedip)
         StopAllCoroutines();
