@@ -439,10 +439,30 @@ public class EnemyAI : MonoBehaviour
 
     private void UpdateSpriteFacing(bool faceRight)
     {
+        movingRight = faceRight;
+
         if (spriteRenderer != null)
         {
             // Sprite Pixel Adventure default menghadap kanan
             spriteRenderer.flipX = !faceRight;
+        }
+
+        // Cermin posisi EnemyWeapon / Firepoint agar pindah ke sisi kiri musuh saat menghadap kiri
+        Transform weapon = transform.Find("EnemyWeapon");
+        if (weapon != null)
+        {
+            Vector3 pos = weapon.localPosition;
+            pos.x = Mathf.Abs(pos.x) * (faceRight ? 1f : -1f);
+            weapon.localPosition = pos;
+        }
+
+        // Jika Firepoint berada langsung sebagai child musuh (bukan di dalam EnemyWeapon)
+        Transform directFirepoint = transform.Find("Firepoint");
+        if (directFirepoint != null)
+        {
+            Vector3 pos = directFirepoint.localPosition;
+            pos.x = Mathf.Abs(pos.x) * (faceRight ? 1f : -1f);
+            directFirepoint.localPosition = pos;
         }
     }
 
