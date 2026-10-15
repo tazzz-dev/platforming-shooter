@@ -87,9 +87,25 @@ public class EnemyHealth : MonoBehaviour
     {
         OnEnemyKilled?.Invoke();
 
+        // ── Segera matikan semua komponen agar tidak bergerak/damage saat death ──
+        var ai  = GetComponent<EnemyAI>();
+        var rb  = GetComponent<Rigidbody2D>();
+
+        if (ai != null) ai.enabled = false;
+        if (rb != null)
+        {
+            // Kinematic: matikan semua physics (gravity, forces) agar enemy
+            // tidak jatuh dari peta, tapi collider tetap aktif sebagai tumpuan
+            rb.linearVelocity  = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
+
+        // Matikan EnemySpriteAnimator agar tidak menimpa sprite death dari Animator
+        if (spriteAnimator != null) spriteAnimator.enabled = false;
+
         if (newAnimController != null)
         {
-            // Jalankan animasi death, baru destroy setelah selesai
+            // Jalankan animasi death via Animator, baru destroy setelah selesai
             newAnimController.PlayDeath();
             StartCoroutine(DestroyAfterDelay(1.2f));
         }
@@ -101,12 +117,6 @@ public class EnemyHealth : MonoBehaviour
 
     private IEnumerator DestroyAfterDelay(float delay)
     {
-        // Disable AI dan physics agar tidak bergerak saat death anim
-        var ai = GetComponent<EnemyAI>();
-        var rb = GetComponent<Rigidbody2D>();
-        if (ai != null) ai.enabled = false;
-        if (rb != null) rb.linearVelocity = Vector2.zero;
-
         yield return new WaitForSeconds(delay);
         Destroy(gameObject);
     }
