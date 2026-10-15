@@ -7,6 +7,8 @@ public class PauseMenu : MonoBehaviour
     [Header("UI References")]
     [Tooltip("Panel UI Pause Menu yang akan dimunculkan")]
     [SerializeField] private GameObject pauseMenuUI;
+    [Tooltip("Panel UI Guide / Controls yang berisi petunjuk tombol")]
+    [SerializeField] private GameObject guideMenuUI;
 
     [Header("Scene Settings")]
     [Tooltip("Nama scene Main Menu")]
@@ -24,6 +26,11 @@ public class PauseMenu : MonoBehaviour
         {
             pauseMenuUI.SetActive(false);
         }
+
+        if (guideMenuUI != null)
+        {
+            guideMenuUI.SetActive(false);
+        }
     }
 
     private void Update()
@@ -31,6 +38,13 @@ public class PauseMenu : MonoBehaviour
         // Deteksi tombol ESC (menggunakan New Input System)
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
+            // Jika sedang buka panel Guide, tekan ESC akan menutup Guide kembali ke Pause
+            if (guideMenuUI != null && guideMenuUI.activeSelf)
+            {
+                CloseGuide();
+                return;
+            }
+
             if (IsPaused)
             {
                 Resume();
@@ -55,7 +69,48 @@ public class PauseMenu : MonoBehaviour
             pauseMenuUI.SetActive(false);
         }
 
+        if (guideMenuUI != null)
+        {
+            guideMenuUI.SetActive(false);
+        }
+
         Debug.Log("[PauseMenu] Game dilanjutkan (Resume)");
+    }
+
+    /// <summary>
+    /// Membuka panel Guide / Controls dari Pause Menu
+    /// </summary>
+    public void OpenGuide()
+    {
+        if (pauseMenuUI != null)
+        {
+            pauseMenuUI.SetActive(false); // Sembunyikan tombol-tombol pause
+        }
+
+        if (guideMenuUI != null)
+        {
+            guideMenuUI.SetActive(true); // Tampilkan panel guide petunjuk
+        }
+
+        Debug.Log("[PauseMenu] Buka Guide / Controls");
+    }
+
+    /// <summary>
+    /// Menutup panel Guide / Controls dan kembali ke Pause Menu
+    /// </summary>
+    public void CloseGuide()
+    {
+        if (guideMenuUI != null)
+        {
+            guideMenuUI.SetActive(false); // Sembunyikan panel guide
+        }
+
+        if (pauseMenuUI != null)
+        {
+            pauseMenuUI.SetActive(true); // Tampilkan kembali tombol pause
+        }
+
+        Debug.Log("[PauseMenu] Tutup Guide / Controls");
     }
 
     /// <summary>

@@ -99,9 +99,9 @@ public class PlayerMovement : MonoBehaviour
             return; // Berhenti di sini, jangan lanjutkan ke kode jalan/lompat
         }
 
-        // 2. Cek tombol Dash (menggunakan tombol Ctrl Kiri atau Kanan)
-        bool isCtrlPressed = (Keyboard.current.leftCtrlKey.wasPressedThisFrame || Keyboard.current.rightCtrlKey.wasPressedThisFrame);
-        if (isCtrlPressed && Time.time >= lastDashTime + dashCooldown)
+        // 2. Cek tombol Dash (menggunakan tombol E)
+        bool isDashPressed = Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
+        if (isDashPressed && Time.time >= lastDashTime + dashCooldown)
         {
             StartDash();
             return;
