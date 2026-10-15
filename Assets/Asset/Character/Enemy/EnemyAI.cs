@@ -39,6 +39,14 @@ public class EnemyAI : MonoBehaviour
     [Header("Visual & Animation")]
     [SerializeField] private SpriteRenderer spriteRenderer;
 
+    [Header("New Sprite Animator (NewEnemy)")]
+    [Tooltip("Isi jika pakai sprite NewEnemy. Kosongkan jika pakai sprite lama.")]
+    [SerializeField] private NewEnemyAnimController newAnimController;
+
+    [Header("Pistol Object (Kosongkan untuk NewEnemy)")]
+    [Tooltip("GameObject senjata pistol yang mengorbit. Set null/unassign untuk NewEnemy.")]
+    [SerializeField] private GameObject pistolObject;
+
     private Rigidbody2D rb;
     private EnemyHealth healthComponent;
     private Transform playerTransform;
@@ -50,6 +58,8 @@ public class EnemyAI : MonoBehaviour
     private bool isPlayerDetected = false;
 
     public EnemyLevel Level => level;
+    public bool IsPlayerEngaged => isPlayerDetected;
+    public bool IsFacingRight => movingRight;
 
     public void Configure(EnemyLevel lvl, int hp, float pSpeed, float cSpeed, float detectRange, float stopDist, int cDamage)
     {
@@ -69,11 +79,32 @@ public class EnemyAI : MonoBehaviour
         healthComponent = GetComponent<EnemyHealth>();
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
 
+        // Auto-detect animator bridge — cari di GameObject ini dan semua children
+        if (newAnimController == null)
+            newAnimController = GetComponentInChildren<NewEnemyAnimController>();
+
         // Default groundLayer jika belum diset di inspector (Layer 6: Ground, mask = 64)
         if (groundLayer.value == 0)
         {
             groundLayer = LayerMask.GetMask("Ground");
             if (groundLayer.value == 0) groundLayer = 1 << 6;
+        }
+
+        // Auto-find child "EnemyWeapon" jika pistolObject belum diassign manual
+        if (pistolObject == null)
+        {
+            Transform found = transform.Find("EnemyWeapon");
+            if (found != null) pistolObject = found.gameObject;
+        }
+
+        // Sembunyikan VISUAL pistol saja (SpriteRenderer) — EnemyPistol tetap aktif untuk tembak
+        if (pistolObject != null)
+        {
+            // Matikan semua SpriteRenderer di dalam EnemyWeapon (termasuk children)
+            foreach (SpriteRenderer sr in pistolObject.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                sr.enabled = false;
+            }
         }
 
         // Terapkan default stats berdasarkan level
@@ -163,6 +194,7 @@ public class EnemyAI : MonoBehaviour
     // ==========================================
     private void UpdateLevel1()
     {
+        isPlayerDetected = false;
         Patrol(patrolSpeed);
     }
 
@@ -173,6 +205,7 @@ public class EnemyAI : MonoBehaviour
     {
         if (playerTransform == null)
         {
+            isPlayerDetected = false;
             Patrol(patrolSpeed);
             return;
         }
@@ -181,12 +214,14 @@ public class EnemyAI : MonoBehaviour
 
         if (distToPlayer <= detectionRange)
         {
+            isPlayerDetected = true;
             // Player terdeteksi: berhenti dan hadap player
             StopMovement();
             FaceTarget(playerTransform.position.x);
 
-            // Tembak pistol jika cooldown selesai
-            if (Time.time >= nextFireTime)
+            // Tembak pistol jika cooldown selesai (HANYA jika tidak ada EnemyPistol terpisah agar tidak menembak ganda)
+            EnemyPistol pistol = GetComponentInChildren<EnemyPistol>();
+            if (pistol == null && Time.time >= nextFireTime)
             {
                 ShootSingle();
                 nextFireTime = Time.time + fireRate;
@@ -194,6 +229,7 @@ public class EnemyAI : MonoBehaviour
         }
         else
         {
+            isPlayerDetected = false;
             // Tidak ada player: lanjut patroli
             Patrol(patrolSpeed);
         }
@@ -206,6 +242,7 @@ public class EnemyAI : MonoBehaviour
     {
         if (playerTransform == null)
         {
+            isPlayerDetected = false;
             Patrol(patrolSpeed);
             return;
         }
@@ -214,6 +251,7 @@ public class EnemyAI : MonoBehaviour
 
         if (distToPlayer <= detectionRange)
         {
+            isPlayerDetected = true;
             FaceTarget(playerTransform.position.x);
 
             // Jika masih jauh dari stopShootingDistance, kejar player
@@ -226,8 +264,9 @@ public class EnemyAI : MonoBehaviour
                 StopMovement();
             }
 
-            // Tembak mode Burst
-            if (Time.time >= nextFireTime && !isBurstShooting)
+            // Tembak mode Burst (HANYA jika tidak ada EnemyPistol terpisah agar tidak menembak ganda)
+            EnemyPistol pistol = GetComponentInChildren<EnemyPistol>();
+            if (pistol == null && Time.time >= nextFireTime && !isBurstShooting)
             {
                 StartCoroutine(ShootBurstRoutine());
                 nextFireTime = Time.time + fireRate;
@@ -235,6 +274,7 @@ public class EnemyAI : MonoBehaviour
         }
         else
         {
+            isPlayerDetected = false;
             Patrol(patrolSpeed);
         }
     }
@@ -412,6 +452,9 @@ public class EnemyAI : MonoBehaviour
     private void ShootSingle()
     {
         if (bulletPrefab == null) return;
+
+        // Trigger animasi tembak
+        newAnimController?.PlayShoot();
 
         Vector2 spawnPos = firePoint != null ? (Vector2)firePoint.position : (Vector2)transform.position;
         Vector2 shootDir = (playerTransform.position - (Vector3)spawnPos).normalized;

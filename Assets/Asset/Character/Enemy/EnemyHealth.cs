@@ -12,14 +12,16 @@ public class EnemyHealth : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
     private EnemySpriteAnimator spriteAnimator;
+    private NewEnemyAnimController newAnimController;
 
     // Event statis setiap kali ada musuh yang terbunuh
     public static event System.Action OnEnemyKilled;
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        spriteAnimator = GetComponent<EnemySpriteAnimator>();
+        spriteRenderer    = GetComponent<SpriteRenderer>();
+        spriteAnimator    = GetComponent<EnemySpriteAnimator>();
+        newAnimController = GetComponent<NewEnemyAnimController>();
     }
 
     private void Start()
@@ -55,11 +57,11 @@ public class EnemyHealth : MonoBehaviour
             StartCoroutine(DamageFlashRoutine());
         }
 
-        // Animasi Hit jika ada
-        if (spriteAnimator != null)
-        {
+        // Animasi Hit
+        if (newAnimController != null)
+            newAnimController.PlayGetHit();
+        else if (spriteAnimator != null)
             spriteAnimator.PlayHitAnimation();
-        }
 
         // Update tampilan hati
         if (healthBar != null)
@@ -84,6 +86,28 @@ public class EnemyHealth : MonoBehaviour
     private void Die()
     {
         OnEnemyKilled?.Invoke();
+
+        if (newAnimController != null)
+        {
+            // Jalankan animasi death, baru destroy setelah selesai
+            newAnimController.PlayDeath();
+            StartCoroutine(DestroyAfterDelay(1.2f));
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private IEnumerator DestroyAfterDelay(float delay)
+    {
+        // Disable AI dan physics agar tidak bergerak saat death anim
+        var ai = GetComponent<EnemyAI>();
+        var rb = GetComponent<Rigidbody2D>();
+        if (ai != null) ai.enabled = false;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
+        yield return new WaitForSeconds(delay);
         Destroy(gameObject);
     }
 }
