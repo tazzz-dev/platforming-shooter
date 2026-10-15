@@ -28,6 +28,15 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private int contactDamage = 1;
     [SerializeField] private float contactDamageCooldown = 1f;
 
+    [Header("Melee Attack (Level 1)")]
+    [Tooltip("Jarak deteksi untuk mulai mengejar player (sekitar 3-4 blok tile = 3.5 unit)")]
+    [SerializeField] private float meleeChaseRange = 3.5f;
+    [Tooltip("Jarak dekat di mana enemy berhenti dan mulai memukul (misal: 1 unit = menempel)")]
+    [SerializeField] private float meleePunchDistance = 1.1f;
+    [Tooltip("Jeda/cooldown spam punch animasi")]
+    [SerializeField] private float meleeAttackRate = 0.5f;
+    private float nextMeleeTime;
+
     [Header("Ranged Attack (Level 2 & 3)")]
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
@@ -190,12 +199,48 @@ public class EnemyAI : MonoBehaviour
     }
 
     // ==========================================
-    // LEVEL 1: NINJA FROG (Melee Patroli Tabrak)
+    // LEVEL 1: NINJA FROG (Melee Chase & Punch)
     // ==========================================
     private void UpdateLevel1()
     {
-        isPlayerDetected = false;
-        Patrol(patrolSpeed);
+        if (playerTransform == null)
+        {
+            isPlayerDetected = false;
+            Patrol(patrolSpeed);
+            return;
+        }
+
+        float distToPlayer = Vector2.Distance(transform.position, playerTransform.position);
+
+        // 1. Deteksi Player dalam radius ~3-4 blok
+        if (distToPlayer <= meleeChaseRange)
+        {
+            isPlayerDetected = true;
+            FaceTarget(playerTransform.position.x);
+
+            // 2. Jika sudah sangat dekat (jarak pukulan): berhenti dan pukul
+            if (distToPlayer <= meleePunchDistance)
+            {
+                StopMovement();
+
+                if (Time.time >= nextMeleeTime)
+                {
+                    newAnimController?.PlayAttack();
+                    nextMeleeTime = Time.time + meleeAttackRate;
+                }
+            }
+            else
+            {
+                // 3. Masih ada jarak: jalan/kejar mendekat ke arah Player
+                ChasePlayer();
+            }
+        }
+        else
+        {
+            // Di luar jangkauan: kembali patroli santai
+            isPlayerDetected = false;
+            Patrol(patrolSpeed);
+        }
     }
 
     // ==========================================
